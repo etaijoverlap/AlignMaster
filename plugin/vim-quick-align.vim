@@ -6,20 +6,20 @@
 " This software is provided "as is" without warranty of any kind, see the 
 " respective section in the EUPL. USE AT YOUR OWN RISK.
 
-if exists("g:AlignMasterLoaded")
+if exists("g:QuickAlignLoaded")
     finish
 endif
 
-let g:AlignMasterLoaded = 1
+let g:QuickAlignLoaded = 1
 
-function AlignMasterAdd()
-    if !exists("b:AlignMasterPositions")
-        let b:AlignMasterPositions = []
+function QuickAlignAdd()
+    if !exists("b:QuickAlignPositions")
+        let b:QuickAlignPositions = []
     endif
     let l:curpos = getpos(".")
     let l:row = l:curpos[1]
     let l:col = l:curpos[2]
-    for l:pos in b:AlignMasterPositions
+    for l:pos in b:QuickAlignPositions
         if l:pos[0] == l:row 
             for l:c in l:pos[1]
                 if l:c == l:col
@@ -33,18 +33,43 @@ function AlignMasterAdd()
         endif
     endfor
 
-    call add(b:AlignMasterPositions, [l:row, [l:col]])
+    call add(b:QuickAlignPositions, [l:row, [l:col]])
     echom printf("Added position (%d,%d) to alignment list.", l:row, l:col)
 endfunction
 
-function AlignMasterCompare(i1, i2)
+""function QuickAlignRemove()
+""    if !exists("b:QuickAlignPositions")
+""        return
+""    endif
+""    let l:curpos = getpos(".")
+""    let l:row = l:curpos[1]
+""    let l:col = l:curpos[2]
+""    for l:il:pos in b:QuickAlignPositions
+""        if l:pos[0] == l:row 
+""            for l:c in l:pos[1]
+""                if l:c == l:col
+""                    echom printf("Position (%d, %d) is already in alignment list.", l:row, l:col)
+""                    return
+""                endif
+""            endfor
+""            call add(pos[1], l:col)
+""            echom printf("Added column %d to alignment entry for row %d (new depth: %d)", l:col, l:row, len(pos[1]))
+""            return
+""        endif
+""    endfor
+""
+""    call add(b:QuickAlignPositions, [l:row, [l:col]])
+""    echom printf("Added position (%d,%d) to alignment list.", l:row, l:col)
+""endfunction
+
+function QuickAlignCompare(i1, i2)
     return a:i1 - a:i2
 endfunction
 
-function AlignMasterExec()
-    if exists("b:AlignMasterPositions")
+function QuickAlignExec()
+    if exists("b:QuickAlignPositions")
         let l:maxcols = 0
-        for l:rowentry in b:AlignMasterPositions
+        for l:rowentry in b:QuickAlignPositions
             if len(l:rowentry[1]) > l:maxcols
                 let l:maxcols = len(l:rowentry[1])
             endif
@@ -54,8 +79,8 @@ function AlignMasterExec()
         for l:i in range(l:maxcols)
             call add(l:colwidths,0)
         endfor
-        for l:rowentry in b:AlignMasterPositions
-            let l:colentries = sort(l:rowentry[1], "AlignMasterCompare")
+        for l:rowentry in b:QuickAlignPositions
+            let l:colentries = sort(l:rowentry[1], "QuickAlignCompare")
             for l:i in range(len(l:colwidths))
                 if l:i >= len(l:colentries)
                     break
@@ -72,9 +97,9 @@ function AlignMasterExec()
             endfor
         endfor
 
-        for l:rowentry in b:AlignMasterPositions
+        for l:rowentry in b:QuickAlignPositions
             let l:row = l:rowentry[0]
-            let l:colentries = sort(l:rowentry[1], "AlignMasterCompare")
+            let l:colentries = sort(l:rowentry[1], "QuickAlignCompare")
             let l:cumrowcorr = 0
             for l:i in range(l:maxcols)
                 if l:i >= len(l:colentries)
@@ -99,9 +124,15 @@ function AlignMasterExec()
             endfor
         endfor
 
-        let b:AlignMasterPositions = []
+        let b:QuickAlignPositions = []
     endif
 endfunction
 
-nnoremap <C-L><C-L> :call AlignMasterAdd()<CR>
-nnoremap <C-L>e :call AlignMasterExec()<CR>
+function QuickAlignClean()
+    let b:QuickAlignPositions = []
+    echo "Alignment buffer was emptied."
+endfunction
+
+nnoremap <C-L><C-L> :call QuickAlignAdd()<CR>
+nnoremap <C-L>e :call QuickAlignExec()<CR>
+nnoremap <C-L>c :call QuickAlignClean()<CR>
